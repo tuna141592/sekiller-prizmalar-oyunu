@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Şekiller ve Prizmalar</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .game-container {
+            background: white;
+            border-radius: 30px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 900px;
+            width: 100%;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 2.5em;
+        }
+
+        .level-info {
+            text-align: center;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            border-radius: 15px;
+            color: white;
+        }
+
+        .level-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .level-desc {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .stats-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            color: white;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 2em;
+            font-weight: bold;
+        }
+
+        .timer {
+            background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
+        }
+
+        .timer.warning {
+            animation: blink 0.5s infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+        .level-stat {
+            background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
+        }
+
+        .score-stat {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+        }
+
+        .question-area {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: #fff9e6;
+            border-radius: 15px;
+            border: 3px solid #ffd700;
+        }
+
+        .question {
+            font-size: 1.6em;
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        .target-shape {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+        }
+
+        .shapes-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .shape-button {
+            background: white;
+            border: 4px solid #ddd;
+            border-radius: 20px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            min-height: 180px;
+        }
+
+        .shape-button:hover:not(.disabled) {
+            transform: scale(1.05);
+            border-color: #667eea;
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .shape-button.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .shape-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .shape-info {
+            font-size: 0.9em;
+            color: #666;
+            text-align: center;
+        }
+
+        .feedback {
+            text-align: center;
+            font-size: 2em;
+            font-weight: bold;
+            min-height: 50px;
+            margin: 20px 0;
+        }
+
+        .correct {
+            color: #4caf50;
+            animation: bounce 0.5s;
+        }
+
+        .wrong {
+            color: #f44336;
+            animation: shake 0.5s;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-10px); }
+            75% { transform: translateX(10px); }
+        }
+
+        .celebration {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1000;
+        }
+
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            animation: fall 3s linear;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            z-index: 1001;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .level-complete {
+            background: white;
+            padding: 40px;
+            border-radius: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            text-align: center;
+            max-width: 600px;
+            width: 90%;
+        }
+
+        .level-complete h2 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+        }
+
+        .level-complete p {
+            font-size: 1.3em;
+            margin: 10px 0;
+            color: #333;
+        }
+
+        .score-display {
+            font-size: 3em;
+            font-weight: bold;
+            color: #ffd700;
+            margin: 20px 0;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .high-score-badge {
+            background: linear-gradient(135deg, #ffd89b 0%, #19547b 100%);
+            color: white;
+            padding: 15px 30px;
+            border-radius: 20px;
+            font-size: 1.5em;
+            margin: 20px 0;
+            display: inline-block;
+            animation: pulse 2s infinite;
+        }
+
+        .new-record {
+            color: #ff6b6b;
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 15px 0;
+            animation: flash 1s infinite;
+        }
+
+        @keyframes flash {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .leaderboard {
+            margin: 30px 0;
+            text-align: left;
+        }
+
+        .leaderboard h3 {
+            color: #667eea;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+            text-align: center;
+        }
+
+        .leaderboard-item {
+            background: #f0f0f0;
+            padding: 12px 20px;
+            margin: 8px 0;
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .leaderboard-item:hover {
+            transform: translateX(5px);
+            background: #e0e0e0;
+        }
+
+        .leaderboard-item.first {
+            background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+            font-weight: bold;
+            transform: scale(1.05);
+        }
+
+        .leaderboard-item.second {
+            background: linear-gradient(135deg, #c0c0c0 0%, #e8e8e8 100%);
+        }
+
+        .leaderboard-item.third {
+            background: linear-gradient(135deg, #cd7f32 0%, #daa520 100%);
+        }
+
+        .rank {
+            font-size: 1.5em;
+            font-weight: bold;
+            width: 40px;
+        }
+
+        .score-info {
+            flex: 1;
+        }
+
+        .score-value-board {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        .level-complete button {
+            padding: 15px 40px;
+            font-size: 1.3em;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+
+        .level-complete button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.5);
+        }
+
+        .level-complete button.secondary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .game-over {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .game-over h2 {
+            color: white;
+        }
+
+        .game-over p {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1>🎓 Şekiller ve Prizmalar 🎓</h1>
+        
+        <div class="level-info">
+            <div class="level-title" id="levelTitle">Seviye 1: Kolay</div>
+            <div class="level-desc" id="levelDesc">2 Boyutlu Şekiller - 30 saniye</div>
+        </div>
+
+        <div class="stats-board">
+            <div class="stat-card">
+                <div class="stat-label">✅ Doğru</div>
+                <div class="stat-value" id="correct">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">❌ Yanlış</div>
+                <div class="stat-value" id="wrong">0</div>
+            </div>
+            <div class="stat-card timer" id="timerCard">
+                <div class="stat-label">⏱️ Süre</div>
+                <div class="stat-value" id="timer">30</div>
+            </div>
+            <div class="stat-card level-stat">
+                <div class="stat-label">📊 Seviye</div>
+                <div class="stat-value" id="currentLevel">1</div>
+            </div>
+        </div>
+
+        <div class="question-area">
+            <div class="question" id="question"></div>
+            <div class="target-shape" id="targetShape"></div>
+        </div>
+
+        <div class="shapes-grid" id="shapesGrid"></div>
+
+        <div class="feedback" id="feedback"></div>
+    </div>
+
+    <div class="celebration" id="celebration"></div>
+
+    <script>
+        const shapes2D = [
+            {
+                name: 'Daire',
+                info: 'Kenarı yok',
+                draw: (color) => `<svg width="100" height="100"><circle cx="50" cy="50" r="40" fill="${color}"/></svg>`
+            },
+            {
+                name: 'Kare',
+                info: '4 eşit kenar',
+                draw: (color) => `<svg width="100" height="100"><rect x="10" y="10" width="80" height="80" fill="${color}"/></svg>`
+            },
+            {
+                name: 'Üçgen',
+                info: '3 kenar',
+                draw: (color) => `<svg width="100" height="100"><polygon points="50,10 10,90 90,90" fill="${color}"/></svg>`
+            },
+            {
+                name: 'Dikdörtgen',
+                info: '4 kenar (2 uzun, 2 kısa)',
+                draw: (color) => `<svg width="120" height="90"><rect x="10" y="10" width="100" height="70" fill="${color}"/></svg>`
+            },
+            {
+                name: 'Beşgen',
+                info: '5 kenar',
+                draw: (color) => `<svg width="100" height="100"><polygon points="50,10 90,40 75,85 25,85 10,40" fill="${color}"/></svg>`
+            },
+            {
+                name: 'Altıgen',
+                info: '6 kenar',
+                draw: (color) => `<svg width="100" height="100"><polygon points="50,10 85,30 85,70 50,90 15,70 15,30" fill="${color}"/></svg>`
+            }
+        ];
+
+        const shapes3D = [
+            {
+                name: 'Küp',
+                info: '6 kare yüz',
+                draw: (color) => `<svg width="120" height="120"><rect x="20" y="40" width="60" height="60" fill="${color}" stroke="#000" stroke-width="2"/><rect x="40" y="20" width="60" height="60" fill="${color}" opacity="0.7" stroke="#000" stroke-width="2"/><line x1="20" y1="40" x2="40" y2="20" stroke="#000" stroke-width="2"/><line x1="80" y1="40" x2="100" y2="20" stroke="#000" stroke-width="2"/><line x1="80" y1="100" x2="100" y2="80" stroke="#000" stroke-width="2"/></svg>`
+            },
+            {
+                name: 'Küre',
+                info: 'Yuvarlak top şekli',
+                draw: (color) => `<svg width="100" height="100"><circle cx="50" cy="50" r="40" fill="${color}"/><ellipse cx="50" cy="50" rx="40" ry="15" fill="none" stroke="#000" stroke-width="2" opacity="0.5"/><ellipse cx="50" cy="50" rx="15" ry="40" fill="none" stroke="#000" stroke-width="2" opacity="0.5"/></svg>`
+            },
+            {
+                name: 'Silindir',
+                info: 'Yuvarlanabilir',
+                draw: (color) => `<svg width="100" height="120"><ellipse cx="50" cy="20" rx="35" ry="12" fill="${color}"/><rect x="15" y="20" width="70" height="80" fill="${color}"/><ellipse cx="50" cy="100" rx="35" ry="12" fill="${color}" stroke="#000" stroke-width="2"/><ellipse cx="50" cy="20" rx="35" ry="12" fill="none" stroke="#000" stroke-width="2"/></svg>`
+            },
+            {
+                name: 'Koni',
+                info: 'Dondurma külahı',
+                draw: (color) => `<svg width="100" height="120"><polygon points="50,10 10,100 90,100" fill="${color}"/><ellipse cx="50" cy="100" rx="40" ry="12" fill="${color}" stroke="#000" stroke-width="2"/></svg>`
+            },
+            {
+                name: 'Piramit',
+                info: '4 üçgen yüz',
+                draw: (color) => `<svg width="120" height="110"><polygon points="60,10 10,100 110,100" fill="${color}" stroke="#000" stroke-width="2"/><line x1="60" y1="10" x2="85" y2="70" stroke="#000" stroke-width="2"/><line x1="85" y1="70" x2="110" y2="100" stroke="#000" stroke-width="2"/><line x1="85" y1="70" x2="35" y2="100" stroke="#000" stroke-width="2"/></svg>`
+            },
+            {
+                name: 'Prizma',
+                info: 'Üçgen prizma',
+                draw: (color) => `<svg width="120" height="100"><polygon points="20,80 60,20 60,80" fill="${color}" stroke="#000" stroke-width="2"/><polygon points="60,20 100,20 100,80 60,80" fill="${color}" opacity="0.7" stroke="#000" stroke-width="2"/><polygon points="60,80 100,80 80,90 40,90" fill="${color}" opacity="0.5" stroke="#000" stroke-width="2"/><line x1="20" y1="80" x2="40" y2="90" stroke="#000" stroke-width="2"/><line x1="60" y1="20" x2="80" y2="30" stroke="#000" stroke-width="2"/></svg>`
+            }
+        ];
+
+        const levels = [
+            { level: 1, name: 'Kolay', time: 30, type: '2D', options: 4, desc: '2 Boyutlu Şekiller - 30 saniye' },
+            { level: 2, name: 'Orta', time: 25, type: '2D', options: 6, desc: '2 Boyutlu Şekiller - 25 saniye' },
+            { level: 3, name: 'Zor', time: 20, type: '3D', options: 4, desc: '3 Boyutlu Prizmalar - 20 saniye' },
+            { level: 4, name: 'Çok Zor', time: 18, type: '3D', options: 6, desc: '3 Boyutlu Prizmalar - 18 saniye' },
+            { level: 5, name: 'Uzman', time: 15, type: 'Mixed', options: 6, desc: 'Karışık - 15 saniye' },
+            { level: 6, name: 'Usta', time: 12, type: 'Mixed', options: 6, desc: 'Tüm Şekiller - 12 saniye' }
+        ];
+
+        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#f9ca24', '#6c5ce7', '#fd79a8', '#ff9ff3', '#54a0ff'];
+        
+        let correctCount = 0;
+        let wrongCount = 0;
+        let currentTarget;
+        let currentLevelIndex = 0;
+        let timeRemaining = 30;
+        let timerInterval;
+        let answerLocked = false;
+        let questionsInLevel = 0;
+        let questionsToPass = 5;
+        let currentScore = 0;
+
+        function calculateScore() {
+            const baseScore = correctCount * 100;
+            const wrongPenalty = wrongCount * 20;
+            const levelBonus = currentLevelIndex * 50;
+            return Math.max(0, baseScore - wrongPenalty + levelBonus);
+        }
+
+        function getHighScores() {
+            const scores = {};
+            for (let i = 0; i < 10; i++) {
+                const score = parseInt(localStorage.getItem(`highScore${i}`)) || 0;
+                const date = localStorage.getItem(`highScoreDate${i}`) || '';
+                if (score > 0) {
+                    scores[i] = { score, date };
+                }
+            }
+            return Object.values(scores).sort((a, b) => b.score - a.score).slice(0, 5);
+        }
+
+        function saveHighScore(score) {
+            const highScores = getHighScores();
+            const newScores = [...highScores, { score, date: new Date().toLocaleDateString('tr-TR') }];
+            newScores.sort((a, b) => b.score - a.score);
+            const topScores = newScores.slice(0, 5);
+            
+            topScores.forEach((item, index) => {
+                localStorage.setItem(`highScore${index}`, item.score);
+                localStorage.setItem(`highScoreDate${index}`, item.date);
+            });
+            
+            return highScores.length === 0 || score > highScores[0].score;
+        }
+
+        function updateLevelInfo() {
+            const level = levels[currentLevelIndex];
+            document.getElementById('levelTitle').textContent = `Seviye ${level.level}: ${level.name}`;
+            document.getElementById('levelDesc').textContent = level.desc;
+            document.getElementById('currentLevel').textContent = level.level;
+        }
+
+        function startTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            const level = levels[currentLevelIndex];
+            timeRemaining = level.time;
+            document.getElementById('timer').textContent = timeRemaining;
+            
+            const timerCard = document.getElementById('timerCard');
+            timerCard.classList.remove('warning');
+
+            timerInterval = setInterval(() => {
+                timeRemaining--;
+                document.getElementById('timer').textContent = timeRemaining;
+                
+                if (timeRemaining <= 5) {
+                    timerCard.classList.add('warning');
+                }
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    handleTimeout();
+                }
+            }, 1000);
+        }
+
+        function handleTimeout() {
+            answerLocked = true;
+            const feedback = document.getElementById('feedback');
+            feedback.textContent = '⏰ Süre Doldu! Doğrusu: ' + currentTarget.name;
+            feedback.className = 'feedback wrong';
+            wrongCount++;
+            document.getElementById('wrong').textContent = wrongCount;
+            
+            setTimeout(() => {
+                feedback.textContent = '';
+                feedback.className = 'feedback';
+                checkLevelComplete();
+            }, 2500);
+        }
+
+        function getRandomColor() {
+            return colors[Math.floor(Math.random() * colors.length)];
+        }
+
+        function shuffle(array) {
+            const newArray = [...array];
+            for (let i = newArray.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+            }
+            return newArray;
+        }
+
+        function createConfetti() {
+            const celebration = document.getElementById('celebration');
+            for (let i = 0; i < 50; i++) {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.backgroundColor = getRandomColor();
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                celebration.appendChild(confetti);
+                
+                setTimeout(() => confetti.remove(), 3000);
+            }
+        }
+
+        function showLeaderboard() {
+            const highScores = getHighScores();
+            if (highScores.length === 0) return '';
+            
+            let leaderboardHTML = '<div class="leaderboard"><h3>🏆 En Yüksek Skorlar 🏆</h3>';
+            
+            highScores.forEach((item, index) => {
+                const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+                const classes = ['first', 'second', 'third', '', ''];
+                leaderboardHTML += `
+                    <div class="leaderboard-item ${classes[index]}">
+                        <span class="rank">${medals[index]}</span>
+                        <div class="score-info">
+                            <div class="score-value-board">${item.score} Puan</div>
+                            <div style="font-size: 0.9em; color: #666;">${item.date}</div>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            leaderboardHTML += '</div>';
+            return leaderboardHTML;
+        }
+
+        function showLevelComplete() {
+            clearInterval(timerInterval);
+            currentScore = calculateScore();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'modal-overlay';
+            
+            const modal = document.createElement('div');
+            modal.className = 'level-complete';
+            
+            if (currentLevelIndex >= levels.length - 1) {
+                const isNewRecord = saveHighScore(currentScore);
+                
+                modal.classList.add('game-over');
+                modal.innerHTML = `
+                    <h2>🎉 OYUNU BİTİRDİN! 🎉</h2>
+                    <p>Tüm seviyeleri tamamladın!</p>
+                    ${isNewRecord ? '<div class="new-record">🎊 YENİ REKOR! 🎊</div>' : ''}
+                    <div class="score-display">⭐ ${currentScore} PUAN ⭐</div>
+                    <p>✅ Toplam Doğru: ${correctCount}</p>
+                    <p>❌ Toplam Yanlış: ${wrongCount}</p>
+                    <p>🏆 Başarı Oranı: ${Math.round((correctCount / (correctCount + wrongCount)) * 100)}%</p>
+                    ${showLeaderboard()}
+                    <div class="button-group">
+                        <button onclick="location.reload()">🔄 Tekrar Oyna</button>
+                    </div>
+                `;
+            } else {
+                modal.innerHTML = `
+                    <h2>🎉 Seviye Tamamlandı! 🎉</h2>
+                    <p>Seviye ${levels[currentLevelIndex].level} başarıyla tamamlandı!</p>
+                    <div class="score-display">⭐ ${currentScore} PUAN ⭐</div>
+                    <p>✅ Doğru: ${correctCount}</p>
+                    <p>❌ Yanlış: ${wrongCount}</p>
+                    ${showLeaderboard()}
+                    <div class="button-group">
+                        <button onclick="nextLevel()">➡️ Sonraki Seviye</button>
+                        <button class="secondary" onclick="endGame()">🏁 Oyunu Bitir</button>
+                    </div>
+                `;
+            }
+            
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+            createConfetti();
+        }
+
+        function endGame() {
+            currentLevelIndex = levels.length - 1;
+            showLevelComplete();
+        }
+
+        window.nextLevel = function() {
+            document.querySelector('.modal-overlay').remove();
+            currentLevelIndex++;
+            questionsInLevel = 0;
+            updateLevelInfo();
+            nextQuestion();
+        }
+
+        window.endGame = endGame;
+
+        function checkLevelComplete() {
+            questionsInLevel++;
+            if (questionsInLevel >= questionsToPass) {
+                showLevelComplete();
+            } else {
+                answerLocked = false;
+                nextQuestion();
+            }
+        }
+
+        function showFeedback(isCorrect) {
+            clearInterval(timerInterval);
+            const feedback = document.getElementById('feedback');
+            
+            if (isCorrect) {
+                feedback.textContent = '🎉 Harika! Doğru! 🎉';
+                feedback.className = 'feedback correct';
+                correctCount++;
+                document.getElementById('correct').textContent = correctCount;
+                createConfetti();
+            } else {
+                feedback.textContent = '😊 Yanlış! Doğrusu: ' + currentTarget.name;
+                feedback.className = 'feedback wrong';
+                wrongCount++;
+                document.getElementById('wrong').textContent = wrongCount;
+            }
+
+            setTimeout(() => {
+                feedback.textContent = '';
+                feedback.className = 'feedback';
+                checkLevelComplete();
+            }, 2000);
+        }
+
+        function handleAnswer(selectedShape) {
+            if (answerLocked) return;
+            answerLocked = true;
+            
+            const isCorrect = selectedShape === currentTarget.name;
+            showFeedback(isCorrect);
+        }
+
+        function getQuestionType() {
+            const types = ['identify', 'property', 'count'];
+            return types[Math.floor(Math.random() * types.length)];
+        }
+
+        function nextQuestion() {
+            const level = levels[currentLevelIndex];
+            let availableShapes;
+            
+            if (level.type === '2D') {
+                availableShapes = shapes2D;
+            } else if (level.type === '3D') {
+                availableShapes = shapes3D;
+            } else {
+                availableShapes = [...shapes2D, ...shapes3D];
+            }
+
+            currentTarget = availableShapes[Math.floor(Math.random() * availableShapes.length)];
+            const targetColor = getRandomColor();
+            
+            const questionType = getQuestionType();
+            let questionText = '';
+            
+            switch(questionType) {
+                case 'identify':
+                    questionText = `Aşağıdaki şekillerden hangisi ${currentTarget.name.toUpperCase()}?`;
+                    document.getElementById('targetShape').innerHTML = '';
+                    break;
+                case 'property':
+                    questionText = `"${currentTarget.info}" özelliğine sahip şekil hangisi?`;
+                    document.getElementById('targetShape').innerHTML = '';
+                    break;
+                case 'count':
+                    questionText = `Bu şekil hangisidir?`;
+                    document.getElementById('targetShape').innerHTML = currentTarget.draw(targetColor);
+                    break;
+            }
+            
+            document.getElementById('question').textContent = questionText;
+
+            const shuffledShapes = shuffle(availableShapes).slice(0, level.options);
+            
+            if (!shuffledShapes.includes(currentTarget)) {
+                shuffledShapes[Math.floor(Math.random() * shuffledShapes.length)] = currentTarget;
+            }
+
+            const grid = document.getElementById('shapesGrid');
+            grid.innerHTML = '';
+
+            shuffle(shuffledShapes).forEach(shape => {
+                const button = document.createElement('div');
+                button.className = 'shape-button';
+                button.onclick = () => handleAnswer(shape.name);
+                
+                const shapeColor = getRandomColor();
+                button.innerHTML = `
+                    ${shape.draw(shapeColor)}
+                    <div class="shape-name">${shape.name}</div>
+                    <div class="shape-info">${shape.info}</div>
+                `;
+                
+                grid.appendChild(button);
+            });
+
+            answerLocked = false;
+            startTimer();
+        }
+
+        updateLevelInfo();
+        nextQuestion();
+    </script>
+</body>
+</html>

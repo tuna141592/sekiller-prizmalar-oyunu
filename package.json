@@ -1,0 +1,19 @@
+{
+  "name": "sekiller-prizmalar-oyunu",
+  "version": "1.0.0",
+  "description": "2. sınıf öğrencileri için geometrik şekiller ve prizmalar öğrenme oyunu",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "keywords": [
+    "geometry",
+    "education",
+    "game",
+    "shapes",
+    "kids"
+  ],
+  "author": "",
+  "license": "MIT"
+}

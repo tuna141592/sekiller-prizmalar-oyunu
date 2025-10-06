@@ -13,7 +13,7 @@
 
 ## 🚀 Canlı Demo
 
-[Oyunu Oyna](https://your-app-name.vercel.app)
+[Oyunu Oyna](https://sekiller-prizmalar-oyunu.vercel.app/)
 
 ## 📦 Kurulum
 
